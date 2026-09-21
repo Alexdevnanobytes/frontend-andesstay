@@ -1,0 +1,15 @@
+{
+  "name": "frontend-andesstay",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {"start": "ng serve --host 0.0.0.0 --port 4200 --proxy-config proxy.conf.json", "build": "ng build", "check": "ng build --configuration development"},
+  "dependencies": {
+    "@angular/common": "20.3.31", "@angular/compiler": "20.3.31", "@angular/core": "20.3.31",
+    "@angular/forms": "20.3.31", "@angular/platform-browser": "20.3.31",
+    "@angular/platform-browser-dynamic": "20.3.31", "@angular/router": "20.3.31",
+    "@azure/msal-angular": "5.1.0", "@azure/msal-browser": "^5.3.0",
+    "rxjs": "^7.8.2", "tslib": "^2.8.1", "zone.js": "~0.15.1"
+  },
+  "devDependencies": {"@angular-devkit/build-angular": "20.3.37", "@angular/cli": "20.3.37", "@angular/compiler-cli": "20.3.31", "typescript": "~5.9.3"},
+  "engines": {"node": "^20.19.0 || ^22.12.0 || ^24.0.0"}
+}

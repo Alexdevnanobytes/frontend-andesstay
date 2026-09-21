@@ -1,0 +1,16 @@
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" routerLink="/dashboard"><span class="brand-mark">▲</span> AndesStay</a>
+    <nav *ngIf="session.profile" aria-label="Navegación principal">
+      <a routerLink="/dashboard" routerLinkActive="active">Inicio</a>
+      <a routerLink="/reservations" routerLinkActive="active">Reservas</a>
+      <a *ngIf="session.has('ADMIN','RECEPCIONISTA')" routerLink="/catalog" routerLinkActive="active">Catálogo</a>
+    </nav>
+    <button *ngIf="session.profile" type="button" class="small-outline" (click)="logout()">Salir</button>
+  </div>
+</header>
+<main class="wrap">
+  <div *ngIf="!ready" class="alert">Configura Tenant ID, Client ID y el scope en <code>src/environments/environment.ts</code>.</div>
+  <div *ngIf="authError" class="alert">{{authError}}</div>
+  <router-outlet></router-outlet>
+</main>

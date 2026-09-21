@@ -1,0 +1,25 @@
+<section class="page-heading"><div class="eyebrow">INVENTARIO</div><h1>Catálogo de unidades</h1>
+  <p>Habitaciones, cabañas, tarifas y disponibilidad por fecha.</p></section>
+<div *ngIf="error" class="alert">{{error}}</div><div *ngIf="message" class="success">{{message}}</div>
+<section class="card" *ngIf="session.has('ADMIN')"><h2>{{editingId ? 'Editar unidad' : 'Agregar unidad'}}</h2>
+  <div class="form-grid">
+    <label>Código<input name="code" [(ngModel)]="form.code" placeholder="H-101"></label>
+    <label>Tipo<select name="type" [(ngModel)]="form.type"><option value="HABITACION">Habitación</option><option value="CABANA">Cabaña</option></select></label>
+    <label>Descripción<input name="description" [(ngModel)]="form.description" placeholder="Vista a la cordillera"></label>
+    <label>Tarifa por noche ($)<input type="number" name="nightlyRate" min="1" [(ngModel)]="form.nightlyRate"></label>
+  </div><div class="actions"><button class="primary" type="button" [disabled]="!form.code || !form.description || form.nightlyRate <= 0" (click)="save()">Guardar unidad</button>
+    <button *ngIf="editingId" class="secondary" type="button" (click)="reset()">Cancelar edición</button></div>
+</section>
+<section class="card"><h2>Disponibilidad</h2><div class="form-grid">
+  <label>Entrada<input type="date" name="from" [(ngModel)]="from"></label>
+  <label>Salida<input type="date" name="to" [(ngModel)]="to"></label></div>
+  <button class="primary" type="button" (click)="search()">Consultar</button>
+  <p class="hint" *ngIf="from && to">{{availableUnits.length}} unidad(es) disponibles para esas fechas.</p>
+</section>
+<section class="card"><div class="section-row"><h2>Unidades</h2><span>{{units.length}} registradas</span></div>
+  <div class="table-scroll"><table><thead><tr><th>Código</th><th>Tipo</th><th>Descripción</th><th>Tarifa</th><th>Estado</th><th *ngIf="session.has('ADMIN')">Acciones</th></tr></thead>
+    <tbody><tr *ngFor="let unit of units"><td>{{unit.code}}</td><td>{{unit.type}}</td><td>{{unit.description}}</td>
+      <td>${{unit.nightlyRate | number:'1.0-0'}}</td><td><span class="badge">{{unit.active ? 'Activa' : 'Inactiva'}}</span></td>
+      <td *ngIf="session.has('ADMIN')"><div class="row-actions"><button *ngIf="unit.active" (click)="edit(unit)">Editar</button>
+        <button *ngIf="unit.active" (click)="remove(unit)">Desactivar</button></div></td></tr></tbody></table></div>
+</section>
