@@ -35,79 +35,76 @@ export default function App() {
 
   if (accounts.length === 0) {
     return (
-      <main
-        style={{
-          maxWidth: 900,
-          margin: '60px auto',
-          padding: 24
-        }}
-      >
-        <h1>AndesStay</h1>
+      <main className="login-page">
+        <section className="login-card">
+          <div className="login-logo">▲</div>
 
-        <p>
-          Sistema de gestión de reservas y unidades.
-        </p>
+          <h1>AndesStay</h1>
 
-        {!entraConfigured && (
           <p>
-            Microsoft Entra necesita sus valores en
-            <code> .env</code>.
+            Plataforma de gestión de reservas,
+            estadías y unidades.
           </p>
-        )}
 
-        <button
-          disabled={!entraConfigured}
-          onClick={() => void login()}
-        >
-          Iniciar sesión con Microsoft
-        </button>
+          {!entraConfigured && (
+            <div className="alert">
+              Microsoft Entra todavía necesita
+              configuración.
+            </div>
+          )}
+
+          <button
+            className="login-button"
+            disabled={!entraConfigured}
+            onClick={() => void login()}
+          >
+            Iniciar sesión con Microsoft
+          </button>
+        </section>
       </main>
     );
   }
 
   if (session.loading && !session.profile) {
     return (
-      <main
-        style={{
-          maxWidth: 900,
-          margin: '60px auto',
-          padding: 24
-        }}
-      >
-        <h1>AndesStay</h1>
-        <p>Cargando perfil...</p>
+      <main className="login-page">
+        <section className="login-card">
+          <div className="login-logo">▲</div>
+          <h1>AndesStay</h1>
+          <p>Cargando tu perfil...</p>
+        </section>
       </main>
     );
   }
 
   if (!session.profile) {
     return (
-      <main
-        style={{
-          maxWidth: 900,
-          margin: '60px auto',
-          padding: 24
-        }}
-      >
-        <h1>AndesStay</h1>
+      <main className="login-page">
+        <section className="login-card">
+          <div className="login-logo">▲</div>
 
-        <p>
-          No fue posible cargar el perfil desde la API.
-        </p>
+          <h1>AndesStay</h1>
 
-        <button
-          onClick={() => void session.refresh()}
-        >
-          Reintentar
-        </button>
+          <div className="alert">
+            No fue posible cargar el perfil desde la API.
+          </div>
 
-        {' '}
+          <div className="actions">
+            <button
+              className="primary"
+              onClick={() => void session.refresh()}
+            >
+              Reintentar
+            </button>
 
-        <button
-          onClick={() => void logout()}
-        >
-          Salir
-        </button>
+            <button
+              className="secondary"
+              onClick={() => void logout()}
+            >
+              Salir
+            </button>
+          </div>
+        </section>
       </main>
     );
   }
@@ -118,58 +115,59 @@ export default function App() {
     session.has('ADMIN', 'RECEPCIONISTA');
 
   return (
-    <main
-      style={{
-        maxWidth: 1200,
-        margin: '30px auto',
-        padding: 24
-      }}
-    >
-      <header
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 20,
-          marginBottom: 30
-        }}
-      >
-        <div>
-          <h1 style={{ marginBottom: 4 }}>
-            AndesStay
-          </h1>
-
-          <div>
-            {profile.name}
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="brand">
+          <div className="brand-mark">
+            ▲
           </div>
 
-          <small>
-            Rol: {profile.roles.join(', ')}
-          </small>
+          <div className="brand-copy">
+            <h1>AndesStay</h1>
+            <p>
+              Gestión hotelera y reservas
+            </p>
+          </div>
         </div>
 
-        <button
-          onClick={() => void logout()}
-        >
-          Salir
-        </button>
+        <div className="user-chip">
+          <div className="user-data">
+            <div className="user-name">
+              {profile.name}
+            </div>
+
+            <div className="user-role">
+              {profile.roles.join(' · ')}
+            </div>
+          </div>
+
+          <button
+            className="logout-button"
+            onClick={() => void logout()}
+          >
+            Salir
+          </button>
+        </div>
       </header>
 
-      <nav
-        style={{
-          display: 'flex',
-          gap: 10,
-          flexWrap: 'wrap',
-          marginBottom: 30
-        }}
-      >
+      <nav className="app-nav">
         <button
+          className={
+            view === 'inicio'
+              ? 'nav-button active'
+              : 'nav-button'
+          }
           onClick={() => setView('inicio')}
         >
           Inicio
         </button>
 
         <button
+          className={
+            view === 'reservas'
+              ? 'nav-button active'
+              : 'nav-button'
+          }
           onClick={() => setView('reservas')}
         >
           Reservas
@@ -177,6 +175,11 @@ export default function App() {
 
         {canSeeCatalog && (
           <button
+            className={
+              view === 'catalogo'
+                ? 'nav-button active'
+                : 'nav-button'
+            }
             onClick={() => setView('catalogo')}
           >
             Catálogo
@@ -184,46 +187,80 @@ export default function App() {
         )}
       </nav>
 
-      {view === 'inicio' && (
-        <section>
-          <h2>Inicio</h2>
+      <main className="app-content">
+        {view === 'inicio' && (
+          <>
+            <section className="page-heading">
+              <div className="eyebrow">
+                PANEL PRINCIPAL
+              </div>
 
-          <p>
-            Bienvenido, {profile.name}.
-          </p>
+              <h1>
+                Bienvenido, {profile.name}
+              </h1>
 
-          <p>
-            Sesión autenticada correctamente con Microsoft Entra.
-          </p>
+              <p>
+                Administra las operaciones de AndesStay
+                desde un solo lugar.
+              </p>
+            </section>
 
-          {session.has('ADMIN') && (
-            <p>
-              Perfil administrador: puedes gestionar reservas y catálogo.
-            </p>
-          )}
+            <section className="hero-card">
+              <h2>
+                Sesión autenticada correctamente
+              </h2>
 
-          {session.has('RECEPCIONISTA') && (
-            <p>
-              Perfil recepcionista: puedes gestionar las operaciones de reservas.
-            </p>
-          )}
+              <p>
+                Microsoft Entra confirmó tu identidad
+                y tus permisos dentro de la plataforma.
+              </p>
 
-          {session.has('HUESPED') && (
-            <p>
-              Perfil huésped: puedes consultar y gestionar tus reservas.
-            </p>
-          )}
-        </section>
-      )}
+              <div className="dashboard-grid">
+                <div className="dashboard-item">
+                  <strong>
+                    Perfil
+                  </strong>
 
-      {view === 'reservas' && (
-        <Reservations />
-      )}
+                  <span>
+                    {profile.roles.join(', ')}
+                  </span>
+                </div>
 
-      {view === 'catalogo' &&
-        canSeeCatalog && (
-          <Catalog />
+                <div className="dashboard-item">
+                  <strong>
+                    Reservas
+                  </strong>
+
+                  <span>
+                    Gestiona estadías y estados.
+                  </span>
+                </div>
+
+                {canSeeCatalog && (
+                  <div className="dashboard-item">
+                    <strong>
+                      Catálogo
+                    </strong>
+
+                    <span>
+                      Consulta unidades y disponibilidad.
+                    </span>
+                  </div>
+                )}
+              </div>
+            </section>
+          </>
         )}
-    </main>
+
+        {view === 'reservas' && (
+          <Reservations />
+        )}
+
+        {view === 'catalogo' &&
+          canSeeCatalog && (
+            <Catalog />
+          )}
+      </main>
+    </div>
   );
 }
