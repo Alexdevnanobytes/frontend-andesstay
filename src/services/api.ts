@@ -15,9 +15,22 @@ import type {
 
 const API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
 
+// Amazon Cognito: en el API Gateway cada proveedor tiene su ruta y su authorizer.
+// Contra el BFF directo (sin API Gateway) usar VITE_COGNITO_API_PATH=/api.
+const COGNITO_PREFIX = import.meta.env.VITE_COGNITO_API_PATH || '/cognito/api';
+
+let cognitoToken: string | null = null;
+
+// SessionProvider actualiza este token cuando la sesión activa es de Cognito.
+export function setCognitoToken(token: string | null) {
+  cognitoToken = token;
+}
+
 async function getToken(
   instance: IPublicClientApplication
 ): Promise<string> {
+  if (cognitoToken) return cognitoToken;
+
   const account =
     instance.getActiveAccount() ??
     instance.getAllAccounts()[0];
@@ -50,8 +63,9 @@ async function request<T>(
   init: RequestInit = {}
 ): Promise<T> {
   const token = await getToken(instance);
+  const prefix = cognitoToken ? COGNITO_PREFIX : '/api';
 
-  const response = await fetch(`${API_BASE}/api${path}`, {
+  const response = await fetch(`${API_BASE}${prefix}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,

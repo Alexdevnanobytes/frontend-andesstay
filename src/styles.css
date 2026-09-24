@@ -532,6 +532,10 @@ tbody tr:hover {
   box-shadow: 0 8px 20px rgba(32, 158, 149, 0.22);
 }
 
+.login-button + .login-button {
+  margin-top: 12px;
+}
+
 /* =========================
    SCROLL HORIZONTAL TABLAS
 ========================= */
