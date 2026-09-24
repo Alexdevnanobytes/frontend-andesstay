@@ -266,7 +266,7 @@ export default function Reservations() {
               ID del huésped (opcional)
               <input
                 value={form.guestId}
-                placeholder="OID de Microsoft Entra"
+                placeholder="ID del usuario (Entra o Cognito). Vacío = a tu nombre"
                 onChange={e =>
                   setForm({ ...form, guestId: e.target.value })
                 }
