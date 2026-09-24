@@ -2,9 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles.css';
 import { MsalProvider } from '@azure/msal-react';
+import { AuthProvider } from 'react-oidc-context';
 
 import App from './App';
 import { msalInstance } from './auth/msal';
+import { cognitoAuthConfig, cognitoConfigured } from './auth/cognito';
 import { SessionProvider } from './context/SessionContext';
 
 async function start() {
@@ -26,14 +28,23 @@ async function start() {
     }
   }
 
+  const session = (
+    <SessionProvider>
+      <App />
+    </SessionProvider>
+  );
+
   ReactDOM.createRoot(
     document.getElementById('root')!
   ).render(
     <React.StrictMode>
       <MsalProvider instance={msalInstance}>
-        <SessionProvider>
-          <App />
-        </SessionProvider>
+        {/* Amazon Cognito: solo se monta si hay User Pool configurado en el .env. */}
+        {cognitoConfigured ? (
+          <AuthProvider {...cognitoAuthConfig}>{session}</AuthProvider>
+        ) : (
+          session
+        )}
       </MsalProvider>
     </React.StrictMode>
   );

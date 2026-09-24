@@ -1,11 +1,16 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useMsal } from '@azure/msal-react';
+import { AuthContext } from 'react-oidc-context';
 
 import {
   apiScope,
   entraConfigured,
   redirectUri
 } from './auth/msal';
+import {
+  cognitoConfigured,
+  cognitoLogoutUrl
+} from './auth/cognito';
 
 import { useSession } from './context/SessionContext';
 import Reservations from './pages/Reservations';
@@ -15,7 +20,15 @@ type View = 'inicio' | 'reservas' | 'catalogo';
 
 export default function App() {
   const { instance, accounts } = useMsal();
+  // Amazon Cognito: undefined cuando no hay AuthProvider (Cognito sin configurar).
+  const cognito = useContext(AuthContext);
   const session = useSession();
+
+  const usingCognito = Boolean(cognito?.isAuthenticated);
+  const authenticated = accounts.length > 0 || usingCognito;
+  const providerName = usingCognito
+    ? 'Amazon Cognito'
+    : 'Microsoft Entra';
 
   const [view, setView] = useState<View>('inicio');
 
@@ -25,15 +38,27 @@ export default function App() {
     });
   };
 
+  const loginCognito = async () => {
+    await cognito?.signinRedirect();
+  };
+
   const logout = async () => {
     session.clear();
+
+    if (usingCognito) {
+      // Amazon Cognito: borra la sesión local y la del Hosted UI.
+      await cognito?.removeUser();
+      const url = cognitoLogoutUrl();
+      if (url) window.location.assign(url);
+      return;
+    }
 
     await instance.logoutRedirect({
       postLogoutRedirectUri: redirectUri
     });
   };
 
-  if (accounts.length === 0) {
+  if (!authenticated) {
     return (
       <main className="login-page">
         <section className="login-card">
@@ -60,6 +85,16 @@ export default function App() {
           >
             Iniciar sesión con Microsoft
           </button>
+
+          {cognitoConfigured && (
+            <button
+              className="login-button"
+              disabled={Boolean(cognito?.isLoading)}
+              onClick={() => void loginCognito()}
+            >
+              Iniciar sesión con Amazon Cognito
+            </button>
+          )}
         </section>
       </main>
     );
@@ -211,7 +246,7 @@ export default function App() {
               </h2>
 
               <p>
-                Microsoft Entra confirmó tu identidad
+                {providerName} confirmó tu identidad
                 y tus permisos dentro de la plataforma.
               </p>
 

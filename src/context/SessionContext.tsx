@@ -8,7 +8,8 @@ import {
 } from 'react';
 
 import { useMsal } from '@azure/msal-react';
-import { api } from '../services/api';
+import { AuthContext } from 'react-oidc-context';
+import { api, setCognitoToken } from '../services/api';
 import type { Profile, Role } from '../models';
 
 interface SessionValue {
@@ -28,6 +29,17 @@ export function SessionProvider({
   children: ReactNode;
 }) {
   const { instance, accounts } = useMsal();
+  // Amazon Cognito: undefined cuando Cognito no está configurado (sin AuthProvider).
+  const cognito = useContext(AuthContext);
+  const cognitoAccessToken = cognito?.isAuthenticated
+    ? cognito.user?.access_token ?? null
+    : null;
+
+  // Se asigna durante el render para que el primer /api/me ya use el token de Cognito.
+  setCognitoToken(cognitoAccessToken);
+
+  const authenticated =
+    accounts.length > 0 || Boolean(cognitoAccessToken);
 
   const [profile, setProfile] =
     useState<Profile | null>(null);
@@ -69,7 +81,7 @@ export function SessionProvider({
     profile?.roles.some(role => roles.includes(role)) ?? false;
 
   useEffect(() => {
-    if (!accounts.length) {
+    if (!authenticated) {
       setProfile(null);
       return;
     }
@@ -77,7 +89,7 @@ export function SessionProvider({
     void ensure().catch(() => {
       setProfile(null);
     });
-  }, [accounts.length, ensure]);
+  }, [authenticated, ensure]);
 
   return (
     <SessionContext.Provider
