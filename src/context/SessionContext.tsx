@@ -41,6 +41,11 @@ export function SessionProvider({
   const authenticated =
     accounts.length > 0 || Boolean(cognitoAccessToken);
 
+  // El access token de Cognito no trae el correo; el ID token sí (solo para mostrarlo).
+  const cognitoEmail = cognitoAccessToken
+    ? cognito?.user?.profile.email ?? null
+    : null;
+
   const [profile, setProfile] =
     useState<Profile | null>(null);
 
@@ -94,7 +99,10 @@ export function SessionProvider({
   return (
     <SessionContext.Provider
       value={{
-        profile,
+        profile:
+          profile && cognitoEmail
+            ? { ...profile, name: cognitoEmail }
+            : profile,
         loading,
         ensure,
         refresh,
