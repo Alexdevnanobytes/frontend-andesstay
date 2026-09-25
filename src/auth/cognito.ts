@@ -29,7 +29,7 @@ export const cognitoAuthConfig: AuthProviderProps = {
   }
 };
 
-// Cognito no expone end_session_endpoint en su metadata OIDC: se cierra la sesión del Hosted UI a mano.
+// Cierra también la sesión del inicio de sesión administrado de Cognito (endpoint /logout del dominio).
 export function cognitoLogoutUrl(): string | null {
   if (!domain) return null;
   const params = new URLSearchParams({ client_id: clientId, logout_uri: redirectUri });
