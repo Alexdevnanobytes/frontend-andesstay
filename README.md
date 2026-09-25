@@ -47,7 +47,6 @@ Crear un archivo `.env` tomando `.env.example` como referencia.
 
     VITE_ENTRA_TENANT_ID=
     VITE_ENTRA_FRONTEND_CLIENT_ID=
-    VITE_ENTRA_API_CLIENT_ID=
     VITE_API_SCOPE=
     VITE_API_BASE=
     VITE_REDIRECT_URI=http://localhost:4200/
@@ -97,17 +96,14 @@ Este prefijo puede modificarse mediante `VITE_COGNITO_API_PATH`.
 
 ## Logout de Cognito
 
-Amazon Cognito no expone `end_session_endpoint` en la metadata OIDC utilizada por la aplicación.
+Al presionar **Salir** con una sesión de Cognito, el frontend:
 
-Por esta razón, el frontend:
+1. elimina la sesión OIDC local (`removeUser`);
+2. redirige al endpoint de cierre de sesión del dominio de Cognito:
 
-1. elimina la sesión OIDC local;
-2. construye manualmente la URL del Hosted UI;
-3. redirige a:
+    https://<dominio>.auth.us-east-1.amazoncognito.com/logout?client_id=...&logout_uri=http://localhost:4200/
 
-    /logout?client_id=...&logout_uri=...
-
-De esta manera se cierra también la sesión del Hosted UI de Cognito.
+Así se cierra también la sesión del inicio de sesión administrado de Cognito, y el siguiente ingreso vuelve a pedir credenciales. `logout_uri` debe estar registrada en las URL de cierre de sesión del app client.
 
 ## Scopes
 
@@ -149,6 +145,36 @@ Cognito utiliza los grupos del User Pool para representar los mismos roles.
 - Creación, modificación y desactivación de unidades.
 - Manejo de errores de autenticación y autorización.
 - Diseño responsive.
+
+## Permisos por rol
+
+| Pantalla / acción | ADMIN | RECEPCIONISTA | HUESPED |
+|---|---|---|---|
+| Inicio (resumen) | ✅ | ✅ | ✅ |
+| Reservas: ver | Todas | Todas | Solo las propias |
+| Reservas: crear | ✅ (puede indicar el huésped) | ✅ (puede indicar el huésped) | ✅ (a su nombre) |
+| Reservas: editar o eliminar (en estado `CREADA`) | ✅ | ✅ | ✅ (solo las propias) |
+| Reservas: cambiar estado o cancelar | ✅ | ✅ | ❌ |
+| Catálogo: ver unidades y disponibilidad | ✅ | ✅ | ❌ (no ve el menú) |
+| Catálogo: crear, editar y desactivar unidades | ✅ | ❌ | ❌ |
+
+El frontend oculta lo que un rol no puede usar, pero la autorización real la aplica el BFF: si un usuario llama a la API sin el rol requerido, recibe **403** aunque el botón no esté en pantalla.
+
+## Equivalencias Angular → React
+
+El frontend se implementó en React en lugar de Angular. Cada requisito de la guía tiene su equivalente:
+
+| La guía pide (Angular) | En este proyecto (React) | Archivo |
+|---|---|---|
+| Angular integrado con MSAL (`MsalModule`) | `@azure/msal-react` con `MsalProvider` | `src/main.tsx`, `src/auth/msal.ts` |
+| Login y logout | `loginRedirect` y `logoutRedirect` de MSAL (y `signinRedirect` para Cognito) | `src/App.tsx` |
+| Rutas protegidas con `MsalGuard` | Sin sesión solo se muestra la pantalla de login: el resto de la app no se renderiza | `src/App.tsx` |
+| Protección por rol (`RoleGuard`) | Menú y vistas según los roles del perfil (`session.has(...)`), con 403 del BFF como respaldo | `src/App.tsx`, `src/context/SessionContext.tsx` |
+| `MsalInterceptor` adjuntando el Bearer | `request()` obtiene el token con `acquireTokenSilent` y agrega `Authorization: Bearer` a cada llamada | `src/services/api.ts` |
+| Servicios Angular para la API | Cliente `api` con una función por endpoint | `src/services/api.ts` |
+| Pantallas diferenciadas por actor | Inicio, Reservas y Catálogo con las mismas reglas por rol | `src/pages/` |
+
+La versión Angular original se conserva en la rama `angular-original`.
 
 ## Arquitectura
 
