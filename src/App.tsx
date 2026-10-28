@@ -15,8 +15,9 @@ import {
 import { useSession } from './context/SessionContext';
 import Reservations from './pages/Reservations';
 import Catalog from './pages/Catalog';
+import RabbitAdmin from './pages/RabbitAdmin';
 
-type View = 'inicio' | 'reservas' | 'catalogo';
+type View = 'inicio' | 'reservas' | 'catalogo' | 'rabbitmq';
 
 export default function App() {
   const { instance, accounts } = useMsal();
@@ -149,6 +150,8 @@ export default function App() {
   const canSeeCatalog =
     session.has('ADMIN', 'RECEPCIONISTA');
 
+  const canSeeRabbitAdmin = session.has('ADMIN');
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -218,6 +221,19 @@ export default function App() {
             onClick={() => setView('catalogo')}
           >
             Catálogo
+          </button>
+        )}
+
+        {canSeeRabbitAdmin && (
+          <button
+            className={
+              view === 'rabbitmq'
+                ? 'nav-button active'
+                : 'nav-button'
+            }
+            onClick={() => setView('rabbitmq')}
+          >
+            RabbitMQ
           </button>
         )}
       </nav>
@@ -295,6 +311,10 @@ export default function App() {
           canSeeCatalog && (
             <Catalog />
           )}
+
+        {view === 'rabbitmq' && canSeeRabbitAdmin && (
+          <RabbitAdmin />
+        )}
       </main>
     </div>
   );
