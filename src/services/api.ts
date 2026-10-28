@@ -80,6 +80,25 @@ async function request<T>(
   return response.json() as Promise<T>;
 }
 
+export interface RabbitQueue {
+  name: string;
+  durable: boolean;
+  deadLetterExchange?: string | null;
+  deadLetterRoutingKey?: string | null;
+}
+
+export interface RabbitExchange {
+  name: string;
+  type: 'direct' | 'topic';
+  durable: boolean;
+}
+
+export interface RabbitBinding {
+  exchange: string;
+  queue: string;
+  routingKey: string;
+}
+
 export const api = {
   me: (instance: IPublicClientApplication) =>
     request<Profile>(instance, '/me'),
@@ -184,5 +203,71 @@ export const api = {
   ) =>
     request<void>(instance, `/catalog/units/${id}`, {
       method: 'DELETE'
+    }),
+
+  // RabbitMQ: contrato provisional; requiere implementar estas rutas en el BFF.
+  rabbitQueues: (instance: IPublicClientApplication) =>
+    request<RabbitQueue[]>(instance, '/rabbit/queues'),
+
+  createRabbitQueue: (
+    instance: IPublicClientApplication,
+    data: RabbitQueue
+  ) =>
+    request<RabbitQueue>(instance, '/rabbit/queues', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  deleteRabbitQueue: (
+    instance: IPublicClientApplication,
+    name: string
+  ) =>
+    request<void>(
+      instance,
+      `/rabbit/queues/${encodeURIComponent(name)}`,
+      { method: 'DELETE' }
+    ),
+
+  rabbitExchanges: (instance: IPublicClientApplication) =>
+    request<RabbitExchange[]>(instance, '/rabbit/exchanges'),
+
+  createRabbitExchange: (
+    instance: IPublicClientApplication,
+    data: RabbitExchange
+  ) =>
+    request<RabbitExchange>(instance, '/rabbit/exchanges', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  deleteRabbitExchange: (
+    instance: IPublicClientApplication,
+    name: string
+  ) =>
+    request<void>(
+      instance,
+      `/rabbit/exchanges/${encodeURIComponent(name)}`,
+      { method: 'DELETE' }
+    ),
+
+  rabbitBindings: (instance: IPublicClientApplication) =>
+    request<RabbitBinding[]>(instance, '/rabbit/bindings'),
+
+  createRabbitBinding: (
+    instance: IPublicClientApplication,
+    data: RabbitBinding
+  ) =>
+    request<RabbitBinding>(instance, '/rabbit/bindings', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  deleteRabbitBinding: (
+    instance: IPublicClientApplication,
+    data: RabbitBinding
+  ) =>
+    request<void>(instance, '/rabbit/bindings', {
+      method: 'DELETE',
+      body: JSON.stringify(data)
     })
 };
