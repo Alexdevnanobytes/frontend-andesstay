@@ -17,7 +17,7 @@ La aplicación permite autenticación mediante Microsoft Entra ID y, de forma op
 
 ## Ejecución local
 
-Instalar dependencias:
+Instalar dependencias (o usar `npm ci` para respetar el lockfile):
 
     npm install
 
@@ -38,6 +38,14 @@ Comprobar TypeScript:
 Generar build:
 
     npm run build
+
+También se puede validar la imagen estática del frontend, sin desplegarla en AWS:
+
+    docker build -t andesstay-frontend .
+
+La imagen sirve el contenido de React con Nginx en el puerto 80. Para el flujo acordado en la evaluación,
+el frontend se ejecuta localmente en `http://localhost:4200`; el backend sigue en AWS y se consume mediante
+`VITE_API_BASE` (API Gateway). El Dockerfile no implica que el frontend deba desplegarse en EC2.
 
 ## Variables de entorno
 
@@ -232,4 +240,7 @@ La URL base se configura mediante:
 
 El frontend consume APIs publicadas mediante AWS API Gateway.
 
-El backend está desplegado con Docker Compose en AWS EC2 y utiliza PostgreSQL alojado en AWS RDS.
+El backend está desplegado con Docker Compose en AWS EC2 y utiliza PostgreSQL alojado en AWS RDS. Para la
+demostración presencial, iniciar el frontend localmente con `npm run dev` y comprobar que `.env` apunta al
+API Gateway activo y que la URL `http://localhost:4200/` está registrada como redirect URI en el proveedor
+de identidad. No subir `.env` ni credenciales a GitHub.

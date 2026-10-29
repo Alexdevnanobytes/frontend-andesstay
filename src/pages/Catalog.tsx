@@ -1,3 +1,7 @@
+// Pantalla Catálogo (solo ADMIN y RECEPCIONISTA; App ni siquiera la muestra a un huésped).
+// - Todo el personal ve las unidades y puede buscar disponibilidad por fechas.
+// - Solo ADMIN ve el formulario para crear o editar y los botones Editar y Desactivar.
+// Si otro rol intentara esas acciones igual, el BFF respondería 403.
 import { useEffect, useState } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { api } from '../services/api';
@@ -5,9 +9,12 @@ import { useSession } from '../context/SessionContext';
 import type { Unit } from '../models';
 
 export default function Catalog() {
+  // Instancia de MSAL (para obtener el token) y sesión (para revisar roles).
   const { instance } = useMsal();
   const session = useSession();
 
+  // Estado de la pantalla: unidades registradas, unidades disponibles en la búsqueda, mensajes,
+  // unidad que se está editando (vacío = creando una nueva) y fechas de búsqueda.
   const [units, setUnits] = useState<Unit[]>([]);
   const [availableUnits, setAvailableUnits] = useState<Unit[]>([]);
   const [error, setError] = useState('');
@@ -16,6 +23,7 @@ export default function Catalog() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
 
+  // Datos del formulario de unidad.
   const [form, setForm] = useState<{
     code: string;
     type: 'HABITACION' | 'CABANA';
@@ -28,6 +36,7 @@ export default function Catalog() {
     nightlyRate: 0
   });
 
+  // Carga todas las unidades (GET /catalog/units). Si falla, muestra el error.
   const load = async () => {
     try {
       setUnits(await api.units(instance));
@@ -36,10 +45,13 @@ export default function Catalog() {
     }
   };
 
+  // Al abrir la pantalla, carga las unidades una sola vez (arreglo de dependencias vacío).
   useEffect(() => {
     void load();
   }, []);
 
+  // Busca unidades disponibles entre dos fechas. Primero valida en el navegador que la salida
+  // sea posterior a la entrada; el backend lo valida otra vez (400).
   const search = async () => {
     if (!from || !to || from >= to) {
       setError('Selecciona fechas válidas.');
@@ -56,6 +68,7 @@ export default function Catalog() {
     }
   };
 
+  // Limpia el formulario y sale del modo edición.
   const reset = () => {
     setEditingId('');
     setForm({
@@ -66,6 +79,8 @@ export default function Catalog() {
     });
   };
 
+  // Guarda: si hay una unidad en edición la actualiza (PUT); si no, crea una nueva (POST).
+  // Después recarga la lista. Si el código está repetido, el backend responde 409 y se muestra el error.
   const save = async () => {
     setError('');
     setMessage('');
@@ -85,6 +100,7 @@ export default function Catalog() {
     }
   };
 
+  // Pasa una unidad al formulario para editarla y sube la página hasta el formulario.
   const edit = (unit: Unit) => {
     setEditingId(unit.id);
 
@@ -98,6 +114,7 @@ export default function Catalog() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Desactiva una unidad (DELETE), previa confirmación. Si tiene reservas activas, el backend responde 409.
   const remove = async (unit: Unit) => {
     if (!window.confirm(`¿Desactivar ${unit.code}?`)) return;
 
@@ -110,6 +127,7 @@ export default function Catalog() {
     }
   };
 
+  // Estructura de la pantalla: encabezado, avisos, formulario (solo ADMIN), búsqueda por fechas y tabla.
   return (
     <>
       <section className="page-heading">
@@ -120,9 +138,11 @@ export default function Catalog() {
         </p>
       </section>
 
+      {/* Avisos de error (rojo) y de éxito (verde). */}
       {error && <div className="alert">{error}</div>}
       {message && <div className="success">{message}</div>}
 
+      {/* Formulario de creación y edición: solo visible para ADMIN. */}
       {session.has('ADMIN') && (
         <section className="card">
           <h2>
@@ -191,6 +211,7 @@ export default function Catalog() {
             </label>
           </div>
 
+          {/* Botón Guardar y, si se está editando, botón Cancelar edición. */}
           <div className="actions">
             <button
               className="primary"
@@ -216,6 +237,7 @@ export default function Catalog() {
         </section>
       )}
 
+      {/* Búsqueda de disponibilidad por fechas (GET /catalog/available). */}
       <section className="card">
         <h2>Disponibilidad</h2>
 
@@ -254,6 +276,7 @@ export default function Catalog() {
         )}
       </section>
 
+      {/* Tabla de unidades registradas. La columna Acciones solo aparece para ADMIN. */}
       <section className="card">
         <div className="section-row">
           <h2>Unidades</h2>
@@ -274,6 +297,7 @@ export default function Catalog() {
             </thead>
 
             <tbody>
+              {/* Una fila por unidad; key ayuda a React a identificar cada fila al actualizar la tabla. */}
               {units.map(unit => (
                 <tr key={unit.id}>
                   <td>{unit.code}</td>
@@ -288,6 +312,7 @@ export default function Catalog() {
                     </span>
                   </td>
 
+                  {/* Botones Editar y Desactivar: solo ADMIN y solo en unidades activas. */}
                   {session.has('ADMIN') && (
                     <td>
                       <div className="row-actions">

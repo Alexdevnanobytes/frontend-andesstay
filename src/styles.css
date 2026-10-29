@@ -631,3 +631,102 @@ tbody tr:hover {
     width: 100%;
   }
 }
+
+/* =========================
+   TABLA DE RESERVAS
+   (solo afecta a .reservations-table)
+========================= */
+
+.reservations-table td {
+  vertical-align: middle;
+}
+
+/* Código de la unidad (H-101) destacado. */
+.reservations-table .unit-code {
+  font-weight: 750;
+  color: #16324a;
+}
+
+/* Id del huésped abreviado; el valor completo aparece al pasar el mouse. */
+.reservations-table .id-chip {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: #f1f5f7;
+  color: #4a6070;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+}
+
+.reservations-table .stay-dates {
+  color: #1f3645;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reservations-table .stay-nights {
+  margin-top: 2px;
+  color: #7a8b97;
+  font-size: 0.8rem;
+}
+
+/* Colores por estado: el recorrido va de azul (creada) a verde (en estadía). */
+.reservations-table .badge { white-space: nowrap; }
+.reservations-table .status-creada { background: #eef2ff; color: #3730a3; }
+.reservations-table .status-confirmada { background: #e0f2f1; color: #0f6b63; }
+.reservations-table .status-checkin_pendiente { background: #fff7e6; color: #9a5b00; }
+.reservations-table .status-en_estadia { background: #e7f7ec; color: #17693a; }
+.reservations-table .status-checkout { background: #f1f3f5; color: #55636d; }
+.reservations-table .status-cancelada { background: #fdecec; color: #a3261c; }
+
+/* Botones de acción: separados, del mismo tamaño y con color según lo que hacen. */
+.reservations-table .row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.reservations-table .action {
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-size: 0.84rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Acción principal: avanzar al siguiente estado. */
+.reservations-table .action-advance {
+  color: white;
+  background: linear-gradient(135deg, #16877f, #25a59b);
+  box-shadow: 0 4px 12px rgba(22, 135, 127, 0.22);
+}
+
+.reservations-table .action-neutral {
+  color: #34505e;
+  background: white;
+  border-color: #cfdbe2;
+}
+
+.reservations-table .action-warn {
+  color: #9a5b00;
+  background: #fffaf0;
+  border-color: #f5d9a8;
+}
+
+.reservations-table .action-danger {
+  color: #b42318;
+  background: #fff5f4;
+  border-color: #f7c7c2;
+}
+
+.reservations-table .action-neutral:hover:not(:disabled) { background: #f4f8fa; }
+.reservations-table .action-warn:hover:not(:disabled) { background: #fff1d6; }
+.reservations-table .action-danger:hover:not(:disabled) { background: #ffe6e3; }
+
+.reservations-table .no-actions {
+  color: #9aa8b2;
+  font-size: 0.84rem;
+  font-style: italic;
+}

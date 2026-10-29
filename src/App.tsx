@@ -1,3 +1,8 @@
+// Componente principal de la aplicación. Decide qué mostrar según el estado de la sesión:
+// 1) sin sesión -> pantalla de login (Microsoft y, si está configurado, Cognito);
+// 2) con sesión pero cargando el perfil -> "Cargando tu perfil...";
+// 3) con sesión pero sin perfil (por ejemplo, la API respondió 403) -> mensaje de error;
+// 4) con perfil -> la aplicación con su menú (Inicio, Reservas y Catálogo según el rol).
 import { useContext, useState } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { AuthContext } from 'react-oidc-context';
@@ -16,32 +21,41 @@ import { useSession } from './context/SessionContext';
 import Reservations from './pages/Reservations';
 import Catalog from './pages/Catalog';
 
+// Vistas posibles del menú. Se cambia de vista con un estado local (no hay URLs distintas por vista).
 type View = 'inicio' | 'reservas' | 'catalogo';
 
 export default function App() {
+  // Sesión de Microsoft (MSAL): instancia y cuentas con sesión iniciada.
   const { instance, accounts } = useMsal();
   // Amazon Cognito: undefined cuando no hay AuthProvider (Cognito sin configurar).
   const cognito = useContext(AuthContext);
+  // Perfil cargado desde el BFF (roles incluidos).
   const session = useSession();
 
+  // ¿Hay sesión con alguno de los dos proveedores? ¿Con cuál? (para el texto de bienvenida)
   const usingCognito = Boolean(cognito?.isAuthenticated);
   const authenticated = accounts.length > 0 || usingCognito;
   const providerName = usingCognito
     ? 'Amazon Cognito'
     : 'Microsoft Entra';
 
+  // Vista seleccionada en el menú; parte en "inicio".
   const [view, setView] = useState<View>('inicio');
 
+  // Login con Microsoft: redirige a login.microsoftonline.com pidiendo el scope de la API.
+  // Al volver, main.tsx procesa la respuesta con handleRedirectPromise().
   const login = async () => {
     await instance.loginRedirect({
       scopes: [apiScope]
     });
   };
 
+  // Login con Cognito: redirige al login administrado del User Pool (código de autorización + PKCE).
   const loginCognito = async () => {
     await cognito?.signinRedirect();
   };
 
+  // Cerrar sesión: primero borra el perfil guardado en el contexto.
   const logout = async () => {
     session.clear();
 
@@ -53,14 +67,17 @@ export default function App() {
       return;
     }
 
+    // Microsoft: cierra la sesión en Entra ID y vuelve a redirectUri.
     await instance.logoutRedirect({
       postLogoutRedirectUri: redirectUri
     });
   };
 
+  // Caso 1: no hay sesión -> pantalla de login.
   if (!authenticated) {
     return (
       <main className="login-page">
+        {/* Tarjeta de login con el logo, el título y los botones de inicio de sesión. */}
         <section className="login-card">
           <div className="login-logo">▲</div>
 
@@ -71,6 +88,7 @@ export default function App() {
             estadías y unidades.
           </p>
 
+          {/* Aviso si faltan las variables de Entra ID en el .env. */}
           {!entraConfigured && (
             <div className="alert">
               Microsoft Entra todavía necesita
@@ -78,6 +96,7 @@ export default function App() {
             </div>
           )}
 
+          {/* Botón de Microsoft: deshabilitado si Entra ID no está configurado. */}
           <button
             className="login-button"
             disabled={!entraConfigured}
@@ -86,6 +105,7 @@ export default function App() {
             Iniciar sesión con Microsoft
           </button>
 
+          {/* Botón de Cognito: solo aparece si Cognito está configurado; se deshabilita mientras procesa. */}
           {cognitoConfigured && (
             <button
               className="login-button"
@@ -100,6 +120,7 @@ export default function App() {
     );
   }
 
+  // Caso 2: hay sesión y el perfil todavía se está cargando (GET /me en curso).
   if (session.loading && !session.profile) {
     return (
       <main className="login-page">
@@ -112,6 +133,8 @@ export default function App() {
     );
   }
 
+  // Caso 3: hay sesión pero no se pudo cargar el perfil. Las causas típicas son un 403 (usuario sin rol),
+  // un 401 (token rechazado) o un 503 (backend caído). Permite reintentar o salir.
   if (!session.profile) {
     return (
       <main className="login-page">
@@ -144,13 +167,17 @@ export default function App() {
     );
   }
 
+  // Caso 4: perfil cargado -> aplicación completa.
   const profile = session.profile;
 
+  // El menú Catálogo solo se muestra al personal. Si un huésped llamara igual a la API, el BFF respondería 403.
   const canSeeCatalog =
     session.has('ADMIN', 'RECEPCIONISTA');
 
   return (
+    // Estructura de la app: cabecera, menú y contenido.
     <div className="app-shell">
+      {/* Cabecera: marca, datos del usuario (nombre y roles) y botón Salir. */}
       <header className="app-header">
         <div className="brand">
           <div className="brand-mark">
@@ -185,6 +212,7 @@ export default function App() {
         </div>
       </header>
 
+      {/* Menú de navegación. El botón activo lleva la clase CSS "active". */}
       <nav className="app-nav">
         <button
           className={
@@ -208,6 +236,7 @@ export default function App() {
           Reservas
         </button>
 
+        {/* Catálogo: solo para ADMIN y RECEPCIONISTA. */}
         {canSeeCatalog && (
           <button
             className={
@@ -222,7 +251,9 @@ export default function App() {
         )}
       </nav>
 
+      {/* Contenido según la vista seleccionada. */}
       <main className="app-content">
+        {/* Vista Inicio: bienvenida, proveedor con el que se inició sesión y accesos según el rol. */}
         {view === 'inicio' && (
           <>
             <section className="page-heading">
@@ -287,10 +318,12 @@ export default function App() {
           </>
         )}
 
+        {/* Vista Reservas (página src/pages/Reservations.tsx). */}
         {view === 'reservas' && (
           <Reservations />
         )}
 
+        {/* Vista Catálogo: doble condición, así un huésped no puede verla aunque cambie la vista. */}
         {view === 'catalogo' &&
           canSeeCatalog && (
             <Catalog />
